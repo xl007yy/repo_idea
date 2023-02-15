@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.lagou.dao.CourseContentMapper">
+    <resultMap id="SectionAndLessonResultMap" type="com.lagou.damian.CourseSection">
+        <result property="id" column="id"></result>
+        <result property="courseId" column="course_id"></result>
+        <result property="sectionName" column="section_name"></result>
+        <result property="description" column="description"></result>
+        <result property="orderNum" column="order_num"></result>
+        <result property="status" column="status"></result>
+        <!-- 使用 collection,配置一对多关系 -->
+        <collection property="lessonList" ofType="com.lagou.damian.CourseLesson">
+            <id property="id" column="lessonId"></id>
+            <result property="courseId" column="course_id"></result>
+            <result property="sectionId" column="section_id"></result>
+            <result property="theme" column="theme"></result>
+            <result property="duration" column="duration"></result>
+            <result property="isFree" column="is_free"></result>
+            <result property="orderNum" column="order_num"></result>
+            <result property="status" column="status"></result>
+        </collection>
+    </resultMap>
+
+    <select id="findSectionAndLessonByCourseId" parameterType="int" resultMap="SectionAndLessonResultMap">
+        select cs.*,
+               cl.id lessonId,
+               cl.section_id,
+               cl.theme,
+               cl.duration,
+               cl.is_free,
+               cl.is_del,
+               cl.order_num,
+               cl.status
+        from course_section cs
+                 left join course_lesson cl on cs.id = cl.section_id
+        where cs.course_id = #{id}
+        order by cs.order_num
+    </select>
+
+    <insert id="saveSection" parameterType="com.lagou.damian.CourseSection">
+        insert into course_section(course_id, section_name, description, create_time, update_time, order_num)
+        values (#{courseId},#{sectionName},#{description},#{createTime},#{updateTime},#{orderNum})
+    </insert>
+
+    <update id="updateSection" parameterType="com.lagou.damian.CourseSection">
+        update course_section
+        <trim prefix="set" suffixOverrides=",">
+            <if test="sectionName != null and sectionName != ''">
+                section_name = #{sectionName},
+            </if>
+            <if test="description != null and description != ''">
+                description = #{description},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime},
+            </if>
+            <if test="orderNum != null or orderNum == 0">
+                order_num = #{orderNum},
+            </if>
+        </trim>
+        <where>
+            <if test="id != null and id != ''">
+                id = #{id}
+            </if>
+        </where>
+    </update>
+</mapper>
